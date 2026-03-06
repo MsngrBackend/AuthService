@@ -17,6 +17,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// ProfileCreator — интерфейс для создания профиля в ProfileService.
+type ProfileCreator interface {
+	CreateProfile(ctx context.Context, userID string) error
+}
+
 var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrEmailNotVerified   = errors.New("email not verified")
@@ -29,6 +34,7 @@ type AuthService struct {
 	sessions *repository.SessionRepo
 	cache    *cache.TokenCache
 	cfg      *config.JWTConfig
+	profiles ProfileCreator
 }
 
 func NewAuthService(
@@ -38,6 +44,10 @@ func NewAuthService(
 	cfg *config.JWTConfig,
 ) *AuthService {
 	return &AuthService{users: users, sessions: sessions, cache: cache, cfg: cfg}
+}
+
+func (s *AuthService) SetProfileCreator(pc ProfileCreator) {
+	s.profiles = pc
 }
 
 // ─── Register ────────────────────────────────────────────────────────────────
@@ -87,7 +97,19 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, email, code string) erro
 		return err
 	}
 
-	return s.cache.DeleteEmailCode(ctx, email)
+	if err := s.cache.DeleteEmailCode(ctx, email); err != nil {
+		return err
+	}
+
+	// Создаём профиль в ProfileService. Ошибка не фатальна — пользователь уже подтверждён,
+	// профиль можно создать повторно при следующем запросе.
+	if s.profiles != nil {
+		if err := s.profiles.CreateProfile(ctx, user.ID.String()); err != nil {
+			fmt.Printf("warn: create profile for %s: %v\n", user.ID, err)
+		}
+	}
+
+	return nil
 }
 
 // ─── Login ────────────────────────────────────────────────────────────────────

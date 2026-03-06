@@ -10,6 +10,16 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/redis/go-redis/v9 v9.7.0
 	golang.org/x/crypto v0.31.0
+)
+
+
+require (
+	github.com/gin-gonic/gin v1.10.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx/v5 v5.7.1
+	github.com/redis/go-redis/v9 v9.7.0
+	golang.org/x/crypto v0.31.0
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect

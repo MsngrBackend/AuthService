@@ -14,6 +14,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/openSystems/auth-service/internal/cache"
+	"github.com/openSystems/auth-service/internal/client"
 	"github.com/openSystems/auth-service/internal/config"
 	"github.com/openSystems/auth-service/internal/handler"
 	"github.com/openSystems/auth-service/internal/repository"
@@ -55,6 +56,7 @@ func main() {
 	sessionRepo := repository.NewSessionRepo(pool)
 	tokenCache := cache.NewTokenCache(rdb)
 	authSvc := service.NewAuthService(userRepo, sessionRepo, tokenCache, &cfg.JWT)
+	authSvc.SetProfileCreator(client.NewProfileClient(cfg.Services.ProfileServiceURL))
 	authHandler := handler.NewAuthHandler(authSvc)
 
 	profileProxy, err := handler.NewProfileProxy(authSvc, cfg.Services.ProfileServiceURL)

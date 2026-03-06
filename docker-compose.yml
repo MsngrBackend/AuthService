@@ -1,7 +1,4 @@
-version: "3.9"
-
 services:
-
   postgres:
     image: postgres:16-alpine
     environment:
@@ -9,10 +6,10 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: auth
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d   # авто-запуск миграций
+      - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -36,6 +33,11 @@ services:
     ports:
       - "8081:8081"
     env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_ADDR: redis:6379
+      PROFILE_SERVICE_URL: http://host.docker.internal:8082
     depends_on:
       postgres:
         condition: service_healthy

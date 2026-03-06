@@ -10,6 +10,7 @@ import (
 	"github.com/openSystems/auth-service/internal/service"
 )
 
+
 // ProfileProxy — обратный прокси для ProfileService.
 // AuthService выполняет роль API Gateway: проверяет JWT, генерирует
 // внутренний токен с claim "sub" и пробрасывает запрос дальше.
@@ -45,17 +46,7 @@ func (p *ProfileProxy) RegisterRoutes(r *gin.Engine) {
 func (p *ProfileProxy) forward(c *gin.Context) {
 	userID := mustUserID(c)
 
-	internalToken, err := p.svc.GenerateInternalToken(userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
-		return
-	}
-
-	// Подменяем Authorization на внутренний токен с "sub" = userID.
-	// ProfileService читает именно "sub", а не "uid" из нашего клиентского JWT.
-	c.Request.Header.Set("Authorization", "Bearer "+internalToken)
-
-	// X-User-ID — удобный хедер для сервисов, которые не хотят парсить JWT.
+	c.Request.Header.Del("Authorization")
 	c.Request.Header.Set("X-User-ID", userID.String())
 
 	p.proxy.ServeHTTP(c.Writer, c.Request)
