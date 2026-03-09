@@ -25,12 +25,26 @@ func NewProfileProxy(svc *service.AuthService, profileServiceURL string) (*Profi
 		return nil, err
 	}
 
-	rp := httputil.NewSingleHostReverseProxy(target)
-	rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-		log.Printf("profile proxy error: %v", err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadGateway)
-		w.Write([]byte(`{"error":"profile service unavailable"}`))
+	rp := &httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			req.URL.Scheme = target.Scheme
+			req.URL.Host = target.Host
+			// Снимаем префикс /api/v1/profile — ProfileService ожидает /me, /contacts, и т.д.
+			req.URL.Path = strings.TrimPrefix(req.URL.Path, "/api/v1/profile")
+			if req.URL.Path == "" {
+				req.URL.Path = "/"
+			}
+			if target.RawPath != "" {
+				req.URL.RawPath = strings.TrimPrefix(req.URL.RawPath, "/api/v1/profile")
+			}
+			req.Host = target.Host
+		},
+		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
+			log.Printf("profile proxy error: %v", err)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadGateway)
+			w.Write([]byte(`{"error":"profile service unavailable"}`))
+		},
 	}
 
 	return &ProfileProxy{svc: svc, proxy: rp}, nil
