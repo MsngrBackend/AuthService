@@ -2,19 +2,21 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: auth
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5434:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - msngr-network
 
   redis:
     image: redis:7-alpine
@@ -25,6 +27,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - msngr-network
 
   auth:
     build:
@@ -36,13 +40,22 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
       REDIS_ADDR: redis:6379
-      PROFILE_SERVICE_URL: http://host.docker.internal:8082
+      PROFILE_SERVICE_URL: http://profile-service:8082
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - msngr-network
 
 volumes:
   pg_data:
+
+networks:
+  msngr-network:
+    external: true
