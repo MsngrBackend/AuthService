@@ -17,6 +17,7 @@ type Config struct {
 
 type ServicesConfig struct {
 	ProfileServiceURL string
+	MessageServiceURL string
 }
 
 type HTTPConfig struct {
@@ -92,7 +93,8 @@ func Load() (*Config, error) {
 			EmailCodeTTL: emailCodeTTL,
 		},
 		Services: ServicesConfig{
-			ProfileServiceURL: env("PROFILE_SERVICE_URL", "http://localhost:8082"),
+			ProfileServiceURL: env("PROFILE_SERVICE_URL", "http://profile-service:8082"),
+			MessageServiceURL: env("MESSAGE_SERVICE_URL", "http://message-service:8000"),
 		},
 	}, nil
 }

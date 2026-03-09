@@ -65,6 +65,12 @@ func main() {
 	}
 	log.Printf("profile proxy → %s", cfg.Services.ProfileServiceURL)
 
+	messageProxy, err := handler.NewMessageProxy(authSvc, cfg.Services.MessageServiceURL)
+	if err != nil {
+		log.Fatalf("message proxy: %v", err)
+	}
+	log.Printf("message proxy → %s", cfg.Services.MessageServiceURL)
+
 	// ─── Router ───────────────────────────────────────────────────────────────
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
@@ -81,6 +87,7 @@ func main() {
 	r.GET("/healthz", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "ok"}) })
 	authHandler.RegisterRoutes(r)
 	profileProxy.RegisterRoutes(r)
+	messageProxy.RegisterRoutes(r)
 
 	// ─── HTTP Server ──────────────────────────────────────────────────────────
 	srv := &http.Server{

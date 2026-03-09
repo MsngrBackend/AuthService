@@ -48,6 +48,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       REDIS_ADDR: redis:6379
       PROFILE_SERVICE_URL: http://profile-service:8082
+      MESSAGE_SERVICE_URL: http://message-service:8000
     depends_on:
       postgres:
         condition: service_healthy
