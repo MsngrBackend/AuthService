@@ -6,14 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/openSystems/auth-service/internal/service"
 )
 
 const userIDKey = "userID"
 
 // AuthMiddleware проверяет JWT из заголовка Authorization: Bearer <token>
 // или из query-параметра ?token= (для WebSocket, где заголовки не поддерживаются).
-func AuthMiddleware(svc *service.AuthService) gin.HandlerFunc {
+func AuthMiddleware(svc authService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := ""
 
