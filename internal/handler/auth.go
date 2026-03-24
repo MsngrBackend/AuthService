@@ -1,20 +1,33 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/openSystems/auth-service/internal/model"
 	"github.com/openSystems/auth-service/internal/repository"
 	"github.com/openSystems/auth-service/internal/service"
 )
 
 type AuthHandler struct {
-	svc *service.AuthService
+	svc authService // было *service.AuthService
 }
 
-func NewAuthHandler(svc *service.AuthService) *AuthHandler {
+type authService interface {
+	Register(ctx context.Context, email, password string) (string, error)
+	ConfirmEmail(ctx context.Context, email, code string) error
+	Login(ctx context.Context, email, password, userAgent, ip string) (*service.TokenPair, error)
+	Logout(ctx context.Context, refreshToken string) error
+	Refresh(ctx context.Context, oldRefreshToken, userAgent, ip string) (*service.TokenPair, error)
+	GetSessions(ctx context.Context, userID uuid.UUID) ([]model.Session, error)
+	RevokeSession(ctx context.Context, sessionID, userID uuid.UUID) error
+	ParseAccessToken(tokenStr string) (*service.Claims, error)
+}
+
+func NewAuthHandler(svc authService) *AuthHandler {
 	return &AuthHandler{svc: svc}
 }
 
